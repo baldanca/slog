@@ -22,6 +22,9 @@ func humanizeAll(i ...interface{}) []interface{} {
 	}
 
 	for index, data := range i {
+		if data == nil {
+			continue
+		}
 		dataH, err := humanize(data)
 		if err != nil {
 			Warn(err)
