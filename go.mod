@@ -1,4 +1,4 @@
-module slog
+module github.com/luigiBaldanza/slog
 
 go 1.12
 
