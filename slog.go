@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	flags = log.Ldate | log.Ltime | log.Lshortfile
+	flags = log.Ldate | log.Ltime
 
 	// debug logger
 	debug *log.Logger
@@ -36,25 +36,25 @@ func EnableDebug() {
 
 // Debug function
 func Debug(i ...interface{}) {
-	debug.Println(humanizeAll(i...)...)
+	debug.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
 
 // Error function
 func Error(i ...interface{}) {
-	err.Println(humanizeAll(i...)...)
+	err.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
 
 // Info function
 func Info(i ...interface{}) {
-	info.Println(humanizeAll(i...)...)
+	info.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
 
 // Warn function
 func Warn(i ...interface{}) {
-	warn.Println(humanizeAll(i...)...)
+	warn.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
 
 // Panic function
 func Panic(i ...interface{}) {
-	panic.Println(humanizeAll(i...)...)
+	panic.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
