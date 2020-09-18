@@ -34,6 +34,11 @@ func EnableDebug() {
 	debug.SetOutput(os.Stdout)
 }
 
+// Custom function
+func Custom(prefix string, calldepth int, i ...interface{}) {
+	log.New(os.Stdout, prefix+" ", flags).Println(humanizeAll(append([]interface{}{caller(calldepth)}, i...)...)...)
+}
+
 // Debug function
 func Debug(i ...interface{}) {
 	debug.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
@@ -49,12 +54,12 @@ func Info(i ...interface{}) {
 	info.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
 
-// Warn function
-func Warn(i ...interface{}) {
-	warn.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
-}
-
 // Panic function
 func Panic(i ...interface{}) {
 	panic.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+}
+
+// Warn function
+func Warn(i ...interface{}) {
+	warn.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
 }
