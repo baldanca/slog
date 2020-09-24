@@ -2,6 +2,7 @@ package slog
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	jsoniter "github.com/json-iterator/go"
@@ -11,8 +12,15 @@ var (
 	humanizeFlag bool = false
 )
 
-// EnableHumanize function
-func EnableHumanize() {
+func init() {
+	// Verify environment variables
+	if os.Getenv("SLOG_HUMANIZE") == "true" {
+		enableHumanize()
+	}
+}
+
+// enableHumanize function
+func enableHumanize() {
 	humanizeFlag = true
 }
 
