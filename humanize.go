@@ -2,40 +2,20 @@ package slog
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 
 	jsoniter "github.com/json-iterator/go"
 )
 
-var (
-	humanizeFlag bool = false
-)
-
-func init() {
-	// Verify environment variables
-	if os.Getenv("SLOG_HUMANIZE") == "true" {
-		enableHumanize()
-	}
-}
-
-// enableHumanize function
-func enableHumanize() {
-	humanizeFlag = true
-}
-
+// humanizeAll informations of an interface array
 func humanizeAll(i ...interface{}) []interface{} {
-	if !humanizeFlag {
-		return i
-	}
-
 	for index, data := range i {
 		if data == nil {
 			continue
 		}
 		dataH, err := humanize(data)
 		if err != nil {
-			Warn(err)
+			StdLog.Warn(err)
 			continue
 		}
 		i[index] = dataH
@@ -44,6 +24,7 @@ func humanizeAll(i ...interface{}) []interface{} {
 	return i
 }
 
+// humanize information
 func humanize(i interface{}) (string, error) {
 
 	// Verifying if is an error type

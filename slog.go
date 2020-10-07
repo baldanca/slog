@@ -1,107 +1,264 @@
 package slog
 
 import (
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
-const (
-	flags = log.Ldate | log.Ltime
-)
+type (
+	// service contract
+	Service interface {
+		Custom(calldepth int, prefix string, v ...interface{})
+		Customf(calldepth int, prefix, format string, v ...interface{})
 
-var (
-	// debugFlag define if debug is enabled
-	debugFlag bool
+		Debug(v ...interface{})
+		Debugf(format string, v ...interface{})
 
-	// debug logger
-	debug *log.Logger
-	// error logger
-	err *log.Logger
-	// info logger
-	info *log.Logger
-	// warn logger
-	warn *log.Logger
-	// panic logger
-	pan *log.Logger
+		Error(v ...interface{})
+		Errorf(format string, v ...interface{})
 
-	// default output of logs
-	defaultOut io.Writer
+		Fatal(v ...interface{})
+		Fatalf(format string, v ...interface{})
 
-	// output of debug logger
-	debugOut io.Writer
-	// output of err logger
-	errOut io.Writer
-	// output of info logger
-	infoOut io.Writer
-	// output of warn logger
-	warnOut io.Writer
-	// output of panic logger
-	panOut io.Writer
-)
+		Info(v ...interface{})
+		Infof(format string, v ...interface{})
 
-func init() {
-	// Define default output
-	defaultOut = os.Stdout
+		Panic(v ...interface{})
+		Panicf(format string, v ...interface{})
 
-	// Verify environment variables
-	if os.Getenv("SLOG_DEBUG") == "true" {
-		enableDebug()
+		Warn(v ...interface{})
+		Warnf(format string, v ...interface{})
+
+		EnableColorize() *Logger
+		EnableDebug() *Logger
+		EnableHumanize() *Logger
+		// EnableNoLog() *Logger
+		// EnableStack() *Logger
+
+		// LoadEnvironment() *Logger
+
+		AddHandler(h Handler)
+
+		// SETOUTPUT
 	}
 
-	setOutputs(defaultOut)
-	updateLoggers()
-}
+	// handler function
+	Handler func(v ...interface{}) []interface{}
 
-func setOutputs(out io.Writer) {
-	debugOut = out
-	errOut = out
-	infoOut = out
-	warnOut = out
-	panOut = out
-}
+	// Logger model
+	Logger struct {
+		calldepth int
+		handlers  []Handler
+		humanize  bool
+		nolog     bool
+		custom    *log.Logger
+		debug     *log.Logger
+		err       *log.Logger
+		fatal     *log.Logger
+		info      *log.Logger
+		panic     *log.Logger
+		warn      *log.Logger
+	}
+)
 
-func updateLoggers() {
-	debug = log.New(debugOut, "[DEBUG] ", flags)
-	err = log.New(errOut, "[ERROR] ", flags)
-	info = log.New(infoOut, "[INFO ] ", flags)
-	warn = log.New(warnOut, "[WARN ] ", flags)
-	pan = log.New(panOut, "[PANIC] ", flags)
-}
-
-// enableDebug function
-func enableDebug() {
-	debugFlag = true
-}
-
-// Custom function
-func Custom(prefix string, calldepth int, i ...interface{}) {
-	log.New(defaultOut, prefix+" ", flags).Println(humanizeAll(append([]interface{}{caller(calldepth)}, i...)...)...)
-}
-
-// Debug function
-func Debug(i ...interface{}) {
-	if debugFlag {
-		debug.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+// New logger service
+func New(out io.Writer, flag int) Service {
+	return &Logger{
+		calldepth: 2,
+		handlers:  []Handler{},
+		humanize:  false,
+		nolog:     false,
+		custom:    log.New(out, customLevel.Prefix(), flag),
+		debug:     log.New(ioutil.Discard, debugLevel.Prefix(), flag),
+		err:       log.New(out, errLevel.Prefix(), flag),
+		fatal:     log.New(out, fatalLevel.Prefix(), flag),
+		info:      log.New(out, infoLevel.Prefix(), flag),
+		panic:     log.New(out, panicLevel.Prefix(), flag),
+		warn:      log.New(out, warnLevel.Prefix(), flag),
 	}
 }
 
-// Error function
-func Error(i ...interface{}) {
-	err.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+// SetStdLog function
+func SetStdLog(l Service) {
+	StdLog = l
 }
 
-// Info function
-func Info(i ...interface{}) {
-	info.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+// AddHandler logger
+func (l *Logger) AddHandler(h Handler) {
+	l.handlers = append(l.handlers, h)
 }
 
-// Panic function
-func Panic(i ...interface{}) {
-	pan.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+// loadHandlers function
+func (l *Logger) loadHandlers(v ...interface{}) []interface{} {
+	for _, handler := range l.handlers {
+		v = handler(v...)
+	}
+	return v
 }
 
-// Warn function
-func Warn(i ...interface{}) {
-	warn.Println(humanizeAll(append([]interface{}{caller(2)}, i...)...)...)
+// Custom logger
+func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
+	if prefix == "" {
+		panic("invalid custom prefix")
+	}
+	if len(prefix) > 5 {
+		panic("custom prefix is too long")
+	}
+	l.custom.SetPrefix(level(prefix).Prefix())
+	v = l.loadHandlers(v...)
+	l.custom.Output(calldepth, fmt.Sprintln(v...))
 }
+
+// Customf logger with format
+func (l *Logger) Customf(calldepth int, prefix, format string, v ...interface{}) {
+	if prefix == "" {
+		panic("invalid custom prefix")
+	}
+	if len(prefix) > 5 {
+		panic("custom prefix is too long")
+	}
+	l.custom.SetPrefix(level(prefix).Prefix())
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.custom.Output(calldepth, fmt.Sprintf(format, v...))
+}
+
+// Debug logger
+func (l *Logger) Debug(v ...interface{}) {
+	l.debug.Output(l.calldepth, fmt.Sprintln(v...))
+}
+
+// Debugf logger with format
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.debug.Output(l.calldepth, fmt.Sprintf(format, v...))
+}
+
+// Error logger
+func (l *Logger) Error(v ...interface{}) {
+	v = l.loadHandlers(v...)
+	l.err.Output(l.calldepth, fmt.Sprintln(v...))
+}
+
+// Errorf logger with format
+func (l *Logger) Errorf(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.err.Output(l.calldepth, fmt.Sprintf(format, v...))
+}
+
+// Fatal logger
+func (l *Logger) Fatal(v ...interface{}) {
+	v = l.loadHandlers(v...)
+	l.fatal.Output(l.calldepth, fmt.Sprintln(v...))
+	os.Exit(1)
+}
+
+// Fatalf logger with format
+func (l *Logger) Fatalf(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.fatal.Output(l.calldepth, fmt.Sprintf(format, v...))
+	os.Exit(1)
+}
+
+// Info logger
+func (l *Logger) Info(v ...interface{}) {
+	v = l.loadHandlers(v...)
+	l.info.Output(l.calldepth, fmt.Sprintln(v...))
+}
+
+// Infof logger with format
+func (l *Logger) Infof(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.info.Output(l.calldepth, fmt.Sprintf(format, v...))
+}
+
+// Panic logger
+func (l *Logger) Panic(v ...interface{}) {
+	v = l.loadHandlers(v...)
+	l.panic.Output(l.calldepth, fmt.Sprintln(v...))
+	panic(fmt.Sprint(v...))
+}
+
+// Panicf logger with format
+func (l *Logger) Panicf(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.panic.Output(l.calldepth, fmt.Sprintf(format, v...))
+	panic(fmt.Sprint(v...))
+}
+
+// Warn logger
+func (l *Logger) Warn(v ...interface{}) {
+	v = l.loadHandlers(v...)
+	l.warn.Output(l.calldepth, fmt.Sprintln(v...))
+}
+
+// Warnf logger with format
+func (l *Logger) Warnf(format string, v ...interface{}) {
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	v = l.loadHandlers(v...)
+	l.warn.Output(l.calldepth, fmt.Sprintf(format, v...))
+}
+
+// EnableColorize function
+func (l *Logger) EnableColorize() *Logger {
+	l.custom.SetPrefix(customLevel.Colorize())
+	l.debug.SetPrefix(debugLevel.Colorize())
+	l.err.SetPrefix(errLevel.Colorize())
+	l.fatal.SetPrefix(fatalLevel.Colorize())
+	l.info.SetPrefix(infoLevel.Colorize())
+	l.panic.SetPrefix(panicLevel.Colorize())
+	l.warn.SetPrefix(warnLevel.Colorize())
+	return l
+}
+
+// EnableDebug function
+func (l *Logger) EnableDebug() *Logger {
+	l.debug.SetOutput(os.Stdout)
+	return l
+}
+
+// EnableHumanize function
+func (l *Logger) EnableHumanize() *Logger {
+	l.AddHandler(humanizeAll)
+	return l
+}
+
+/*
+// EnableNoLog function
+func (l *Logger) EnableNoLog() *Logger {
+	return l
+}
+
+// EnableStack function
+func (l *Logger) EnableStack() *Logger {
+	return l
+}
+
+// LoadEnvironment function
+func (l *Logger) LoadEnvironment() *Logger {
+	return l
+}
+*/
