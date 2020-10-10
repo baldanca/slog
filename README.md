@@ -1,4 +1,4 @@
-# Slog
+# Slog (WORK IN PROGRESS)
 
 Slog is a logger for Go based on the standard library logger.
 
