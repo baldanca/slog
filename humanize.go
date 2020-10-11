@@ -13,23 +13,18 @@ func humanizeAll(i ...interface{}) []interface{} {
 		if data == nil {
 			continue
 		}
-		dataH, err := humanize(data)
-		if err != nil {
-			StdLog.Warn(err)
-			continue
-		}
-		i[index] = dataH
+		i[index] = humanize(data)
 	}
 
 	return i
 }
 
 // humanize information
-func humanize(i interface{}) (string, error) {
+func humanize(i interface{}) string {
 
 	// Verifying if is an error type
 	if err, ok := i.(error); ok {
-		return err.Error(), nil
+		return err.Error()
 	}
 
 	// Getting type of data interface
@@ -60,55 +55,55 @@ func humanize(i interface{}) (string, error) {
 		// Transforming data to JSON
 		bytes, err := jsoniter.Marshal(v.Interface())
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 
 		// Returning JSON data
-		return string(bytes), nil
+		return string(bytes)
 
 	// Map
 	case reflect.Map:
 		// Transforming data to JSON
 		bytes, err := jsoniter.Marshal(v.Interface())
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 
 		// Returning JSON data
-		return string(bytes), nil
+		return string(bytes)
 
 	// Array
 	case reflect.Array:
 		if av, ok := i.([]byte); ok {
-			return string(av), nil
+			return string(av)
 		}
 
 		// Transforming data to JSON
 		bytes, err := jsoniter.Marshal(v.Interface())
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 
 		// Returning JSON data
-		return string(bytes), nil
+		return string(bytes)
 
 	// Slice
 	case reflect.Slice:
 		if av, ok := i.([]byte); ok {
-			return string(av), nil
+			return string(av)
 		}
 
 		// Transforming data to JSON
 		bytes, err := jsoniter.Marshal(v.Interface())
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 
 		// Returning JSON data
-		return string(bytes), nil
+		return string(bytes)
 
 	// Default
 	default:
-		return fmt.Sprintf("%v", i), nil
+		return fmt.Sprintf("%v", i)
 	}
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	// service contract
+	// Service contract
 	Service interface {
 		Custom(calldepth int, prefix string, v ...interface{})
 		Customf(calldepth int, prefix, format string, v ...interface{})
@@ -33,28 +33,27 @@ type (
 		Warn(v ...interface{})
 		Warnf(format string, v ...interface{})
 
-		EnableColorize() *Logger
 		EnableDebug() *Logger
-		EnableHumanize() *Logger
-		// EnableNoLog() *Logger
-		// EnableStack() *Logger
+		Colorize() *Logger
+
+		AddHandler(h Handler) *Logger
+		Humanize() *Logger
+		NoLog() *Logger
+
+		NewStack() *Stack
 
 		// LoadEnvironment() *Logger
-
-		AddHandler(h Handler)
 
 		// SETOUTPUT
 	}
 
-	// handler function
-	Handler func(v ...interface{}) []interface{}
-
 	// Logger model
 	Logger struct {
 		calldepth int
-		handlers  []Handler
+		handlers  *Handlers
 		humanize  bool
 		nolog     bool
+		stack     *Stack
 		custom    *log.Logger
 		debug     *log.Logger
 		err       *log.Logger
@@ -69,7 +68,7 @@ type (
 func New(out io.Writer, flag int) Service {
 	return &Logger{
 		calldepth: 2,
-		handlers:  []Handler{},
+		handlers:  new(Handlers),
 		humanize:  false,
 		nolog:     false,
 		custom:    log.New(out, customLevel.Prefix(), flag),
@@ -82,24 +81,6 @@ func New(out io.Writer, flag int) Service {
 	}
 }
 
-// SetStdLog function
-func SetStdLog(l Service) {
-	StdLog = l
-}
-
-// AddHandler logger
-func (l *Logger) AddHandler(h Handler) {
-	l.handlers = append(l.handlers, h)
-}
-
-// loadHandlers function
-func (l *Logger) loadHandlers(v ...interface{}) []interface{} {
-	for _, handler := range l.handlers {
-		v = handler(v...)
-	}
-	return v
-}
-
 // Custom logger
 func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
 	if prefix == "" {
@@ -109,7 +90,7 @@ func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
 		panic("custom prefix is too long")
 	}
 	l.custom.SetPrefix(level(prefix).Prefix())
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.custom.Output(calldepth, fmt.Sprintln(v...))
 }
 
@@ -125,7 +106,7 @@ func (l *Logger) Customf(calldepth int, prefix, format string, v ...interface{})
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.custom.Output(calldepth, fmt.Sprintf(format, v...))
 }
 
@@ -139,13 +120,13 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.debug.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Error logger
 func (l *Logger) Error(v ...interface{}) {
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.err.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
@@ -154,13 +135,13 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.err.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Fatal logger
 func (l *Logger) Fatal(v ...interface{}) {
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.fatal.Output(l.calldepth, fmt.Sprintln(v...))
 	os.Exit(1)
 }
@@ -170,14 +151,14 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.fatal.Output(l.calldepth, fmt.Sprintf(format, v...))
 	os.Exit(1)
 }
 
 // Info logger
 func (l *Logger) Info(v ...interface{}) {
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.info.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
@@ -186,13 +167,13 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.info.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Panic logger
 func (l *Logger) Panic(v ...interface{}) {
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.panic.Output(l.calldepth, fmt.Sprintln(v...))
 	panic(fmt.Sprint(v...))
 }
@@ -202,14 +183,14 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.panic.Output(l.calldepth, fmt.Sprintf(format, v...))
 	panic(fmt.Sprint(v...))
 }
 
 // Warn logger
 func (l *Logger) Warn(v ...interface{}) {
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.warn.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
@@ -218,12 +199,18 @@ func (l *Logger) Warnf(format string, v ...interface{}) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
-	v = l.loadHandlers(v...)
+	v = l.handlers.run(v...)
 	l.warn.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
-// EnableColorize function
-func (l *Logger) EnableColorize() *Logger {
+// EnableDebug function
+func (l *Logger) EnableDebug() *Logger {
+	l.debug.SetOutput(os.Stdout)
+	return l
+}
+
+// Colorize function
+func (l *Logger) Colorize() *Logger {
 	l.custom.SetPrefix(customLevel.Colorize())
 	l.debug.SetPrefix(debugLevel.Colorize())
 	l.err.SetPrefix(errLevel.Colorize())
@@ -234,31 +221,34 @@ func (l *Logger) EnableColorize() *Logger {
 	return l
 }
 
-// EnableDebug function
-func (l *Logger) EnableDebug() *Logger {
-	l.debug.SetOutput(os.Stdout)
+// AddHandler logger
+func (l *Logger) AddHandler(h Handler) *Logger {
+	l.handlers.Add(h)
 	return l
 }
 
-// EnableHumanize function
-func (l *Logger) EnableHumanize() *Logger {
+// Humanize function
+func (l *Logger) Humanize() *Logger {
 	l.AddHandler(humanizeAll)
 	return l
 }
 
-/*
-// EnableNoLog function
-func (l *Logger) EnableNoLog() *Logger {
+// NoLog function
+// If Humanize is enabled, NoLog function should be used before humanize
+func (l *Logger) NoLog() *Logger {
+	l.AddHandler(noLogAll)
 	return l
 }
 
-// EnableStack function
-func (l *Logger) EnableStack() *Logger {
-	return l
+// NewStack funtion
+func (l *Logger) NewStack() *Stack {
+	l.stack = new(Stack)
+	l.custom.SetOutput(io.MultiWriter(l.custom.Writer(), l.stack))
+	l.debug.SetOutput(io.MultiWriter(l.debug.Writer(), l.stack))
+	l.err.SetOutput(io.MultiWriter(l.err.Writer(), l.stack))
+	l.fatal.SetOutput(io.MultiWriter(l.fatal.Writer(), l.stack))
+	l.info.SetOutput(io.MultiWriter(l.info.Writer(), l.stack))
+	l.panic.SetOutput(io.MultiWriter(l.panic.Writer(), l.stack))
+	l.warn.SetOutput(io.MultiWriter(l.warn.Writer(), l.stack))
+	return l.stack
 }
-
-// LoadEnvironment function
-func (l *Logger) LoadEnvironment() *Logger {
-	return l
-}
-*/

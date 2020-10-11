@@ -12,7 +12,12 @@ var (
 
 func init() {
 	// Setting standard
-	SetStdLog(New(os.Stdout, log.Ldate|log.Ltime))
+	SetStdLog(New(os.Stdout, log.Ldate|log.Ltime).NoLog().Humanize())
+}
+
+// SetStdLog function
+func SetStdLog(l Service) {
+	StdLog = l
 }
 
 // AddHandler to standard logger
