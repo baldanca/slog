@@ -20,11 +20,6 @@ func SetStdLog(l Service) {
 	StdLog = l
 }
 
-// AddHandler to standard logger
-func AddHandler(h Handler) {
-	StdLog.AddHandler(h)
-}
-
 // Custom standard logger
 func Custom(calldepth int, prefix string, v ...interface{}) {
 	StdLog.Custom(calldepth, prefix, v...)
@@ -75,37 +70,58 @@ func Infof(format string, v ...interface{}) {
 	StdLog.Infof(format, v...)
 }
 
-/*
-// Panic logger
-func (l *Logger) Panic(v ...interface{}) {
-	v = l.loadHandlers(v...)
-	l.panic.Output(l.calldepth, fmt.Sprintln(v...))
-	panic(fmt.Sprint(v...))
+// Panic standard logger
+func Panic(v ...interface{}) {
+	StdLog.Panic(v...)
 }
 
-// Panicf logger with format
-func (l *Logger) Panicf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
-	v = l.loadHandlers(v...)
-	l.panic.Output(l.calldepth, fmt.Sprintf(format, v...))
-	panic(fmt.Sprint(v...))
+// Panicf standard logger with format
+func Panicf(format string, v ...interface{}) {
+	StdLog.Panicf(format, v...)
 }
 
-// Warn logger
-func (l *Logger) Warn(v ...interface{}) {
-	v = l.loadHandlers(v...)
-	l.warn.Output(l.calldepth, fmt.Sprintln(v...))
+// Warn standard logger
+func Warn(v ...interface{}) {
+	StdLog.Warn(v...)
 }
 
-// Warnf logger with format
-func (l *Logger) Warnf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
-	v = l.loadHandlers(v...)
-	l.warn.Output(l.calldepth, fmt.Sprintf(format, v...))
+// Warnf standard logger with format
+func Warnf(format string, v ...interface{}) {
+	StdLog.Warnf(format, v...)
 }
 
-*/
+// EnableDebug on standard logger
+func EnableDebug() Service {
+	StdLog.EnableDebug()
+	return StdLog
+}
+
+// Colorize on standard logger
+func Colorize() Service {
+	StdLog.Colorize()
+	return StdLog
+}
+
+// AddHandler on standard logger
+func AddHandler(h Handler) Service {
+	StdLog.AddHandler(h)
+	return StdLog
+}
+
+// Humanize on standard logger
+func Humanize() Service {
+	StdLog.Humanize()
+	return StdLog
+}
+
+// NoLog on standard logger
+func NoLog() Service {
+	StdLog.NoLog()
+	return StdLog
+}
+
+// NewStack on standard logger
+func NewStack() Service {
+	StdLog.NewStack()
+	return StdLog
+}

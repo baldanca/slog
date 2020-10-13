@@ -41,18 +41,14 @@ type (
 		NoLog() *Logger
 
 		NewStack() *Stack
-
-		// LoadEnvironment() *Logger
-
-		// SETOUTPUT
 	}
 
 	// Logger model
 	Logger struct {
 		calldepth int
 		handlers  *Handlers
+		noLog     bool
 		humanize  bool
-		nolog     bool
 		stack     *Stack
 		custom    *log.Logger
 		debug     *log.Logger
@@ -69,8 +65,8 @@ func New(out io.Writer, flag int) Service {
 	return &Logger{
 		calldepth: 2,
 		handlers:  new(Handlers),
+		noLog:     false,
 		humanize:  false,
-		nolog:     false,
 		custom:    log.New(out, customLevel.Prefix(), flag),
 		debug:     log.New(ioutil.Discard, debugLevel.Prefix(), flag),
 		err:       log.New(out, errLevel.Prefix(), flag),
@@ -81,31 +77,48 @@ func New(out io.Writer, flag int) Service {
 	}
 }
 
-// Custom logger
-func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
+// verifyPrefix input logger
+func (l *Logger) verifyPrefix(prefix string) {
 	if prefix == "" {
 		panic("invalid custom prefix")
 	}
 	if len(prefix) > 5 {
 		panic("custom prefix is too long")
 	}
+}
+
+// verifyFormat input logger
+func (l *Logger) verifyFormat(format *string) {
+	if !strings.HasSuffix(*format, "\n") {
+		*format = *format + "\n"
+	}
+}
+
+// verifyFlags input logger
+func (l *Logger) verifyFlags() {
+	if l.noLog {
+		l.AddHandler(noLogAll)
+	}
+	if l.humanize {
+		l.AddHandler(humanizeAll)
+	}
+}
+
+// Custom logger
+func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
+	l.verifyPrefix(prefix)
 	l.custom.SetPrefix(level(prefix).Prefix())
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.custom.Output(calldepth, fmt.Sprintln(v...))
 }
 
 // Customf logger with format
 func (l *Logger) Customf(calldepth int, prefix, format string, v ...interface{}) {
-	if prefix == "" {
-		panic("invalid custom prefix")
-	}
-	if len(prefix) > 5 {
-		panic("custom prefix is too long")
-	}
+	l.verifyPrefix(prefix)
 	l.custom.SetPrefix(level(prefix).Prefix())
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.custom.Output(calldepth, fmt.Sprintf(format, v...))
 }
@@ -117,30 +130,30 @@ func (l *Logger) Debug(v ...interface{}) {
 
 // Debugf logger with format
 func (l *Logger) Debugf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.debug.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Error logger
 func (l *Logger) Error(v ...interface{}) {
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.err.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
 // Errorf logger with format
 func (l *Logger) Errorf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.err.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Fatal logger
 func (l *Logger) Fatal(v ...interface{}) {
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.fatal.Output(l.calldepth, fmt.Sprintln(v...))
 	os.Exit(1)
@@ -148,9 +161,8 @@ func (l *Logger) Fatal(v ...interface{}) {
 
 // Fatalf logger with format
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.fatal.Output(l.calldepth, fmt.Sprintf(format, v...))
 	os.Exit(1)
@@ -158,21 +170,22 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 
 // Info logger
 func (l *Logger) Info(v ...interface{}) {
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.info.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
 // Infof logger with format
 func (l *Logger) Infof(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.info.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
 
 // Panic logger
 func (l *Logger) Panic(v ...interface{}) {
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.panic.Output(l.calldepth, fmt.Sprintln(v...))
 	panic(fmt.Sprint(v...))
@@ -180,9 +193,8 @@ func (l *Logger) Panic(v ...interface{}) {
 
 // Panicf logger with format
 func (l *Logger) Panicf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.panic.Output(l.calldepth, fmt.Sprintf(format, v...))
 	panic(fmt.Sprint(v...))
@@ -190,15 +202,15 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 
 // Warn logger
 func (l *Logger) Warn(v ...interface{}) {
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.warn.Output(l.calldepth, fmt.Sprintln(v...))
 }
 
 // Warnf logger with format
 func (l *Logger) Warnf(format string, v ...interface{}) {
-	if !strings.HasSuffix(format, "\n") {
-		format = format + "\n"
-	}
+	l.verifyFormat(&format)
+	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.warn.Output(l.calldepth, fmt.Sprintf(format, v...))
 }
@@ -229,14 +241,13 @@ func (l *Logger) AddHandler(h Handler) *Logger {
 
 // Humanize function
 func (l *Logger) Humanize() *Logger {
-	l.AddHandler(humanizeAll)
+	l.humanize = true
 	return l
 }
 
 // NoLog function
-// If Humanize is enabled, NoLog function should be used before humanize
 func (l *Logger) NoLog() *Logger {
-	l.AddHandler(noLogAll)
+	l.noLog = true
 	return l
 }
 
