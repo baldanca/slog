@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	// Setting standard
+	// Setting standard logger
 	SetStdLog(New(os.Stdout, log.Ldate|log.Ltime).NoLog().Humanize())
 }
 

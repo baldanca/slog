@@ -8,7 +8,6 @@ import (
 type (
 	// color type
 	color string
-
 	// level type
 	level string
 )
@@ -21,7 +20,6 @@ const (
 	red    color = "\033[0;91m%s\033[0m"
 	white  color = "\033[0;0m%s\033[0m"
 	yellow color = "\033[0;93m%s\033[0m"
-
 	// Log levels
 	customLevel level = "custom"
 	debugLevel  level = "debug"

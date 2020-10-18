@@ -3,10 +3,14 @@ package slog
 type (
 	// Handler function type
 	Handler func(v ...interface{}) []interface{}
-
 	// Handlers store type
 	Handlers []Handler
 )
+
+// NewHandlers function
+func NewHandlers() *Handlers {
+	return new(Handlers)
+}
 
 // Add handler
 func (hs *Handlers) Add(h Handler) {

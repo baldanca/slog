@@ -1,6 +1,7 @@
 package slog
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,40 +10,50 @@ import (
 	"strings"
 )
 
+var (
+	// ErrInvalidPrefix error
+	ErrInvalidPrefix = errors.New("invalid prefix")
+	// ErrPrefixTooLong error
+	ErrPrefixTooLong = errors.New("prefix too long")
+)
+
 type (
 	// Service contract
 	Service interface {
+		// Loggers
 		Custom(calldepth int, prefix string, v ...interface{})
 		Customf(calldepth int, prefix, format string, v ...interface{})
-
 		Debug(v ...interface{})
 		Debugf(format string, v ...interface{})
-
 		Error(v ...interface{})
 		Errorf(format string, v ...interface{})
-
 		Fatal(v ...interface{})
 		Fatalf(format string, v ...interface{})
-
 		Info(v ...interface{})
 		Infof(format string, v ...interface{})
-
 		Panic(v ...interface{})
 		Panicf(format string, v ...interface{})
-
 		Warn(v ...interface{})
 		Warnf(format string, v ...interface{})
-
+		// Outputs
+		SetDefaultOut(out io.Writer) *Logger
+		SetCustomOut(out io.Writer) *Logger
+		SetDebugOut(out io.Writer) *Logger
+		SetErrorOut(out io.Writer) *Logger
+		SetFatalOut(out io.Writer) *Logger
+		SetInfoOut(out io.Writer) *Logger
+		SetPanicOut(out io.Writer) *Logger
+		SetWarnOut(out io.Writer) *Logger
+		// Features
 		EnableDebug() *Logger
 		Colorize() *Logger
-
+		// Handler
 		AddHandler(h Handler) *Logger
 		Humanize() *Logger
 		NoLog() *Logger
-
+		// Stack
 		NewStack() *Stack
 	}
-
 	// Logger model
 	Logger struct {
 		calldepth int
@@ -50,6 +61,7 @@ type (
 		noLog     bool
 		humanize  bool
 		stack     *Stack
+		file      *File
 		custom    *log.Logger
 		debug     *log.Logger
 		err       *log.Logger
@@ -64,7 +76,7 @@ type (
 func New(out io.Writer, flag int) Service {
 	return &Logger{
 		calldepth: 2,
-		handlers:  new(Handlers),
+		handlers:  NewHandlers(),
 		noLog:     false,
 		humanize:  false,
 		custom:    log.New(out, customLevel.Prefix(), flag),
@@ -80,10 +92,10 @@ func New(out io.Writer, flag int) Service {
 // verifyPrefix input logger
 func (l *Logger) verifyPrefix(prefix string) {
 	if prefix == "" {
-		panic("invalid custom prefix")
+		panic(ErrInvalidPrefix)
 	}
 	if len(prefix) > 5 {
-		panic("custom prefix is too long")
+		panic(ErrPrefixTooLong)
 	}
 }
 
@@ -213,6 +225,60 @@ func (l *Logger) Warnf(format string, v ...interface{}) {
 	l.verifyFlags()
 	v = l.handlers.run(v...)
 	l.warn.Output(l.calldepth, fmt.Sprintf(format, v...))
+}
+
+// SetDefaultOut logger
+func (l *Logger) SetDefaultOut(out io.Writer) *Logger {
+	l.custom.SetOutput(out)
+	l.debug.SetOutput(out)
+	l.err.SetOutput(out)
+	l.fatal.SetOutput(out)
+	l.info.SetOutput(out)
+	l.panic.SetOutput(out)
+	l.warn.SetOutput(out)
+	return l
+}
+
+// SetCustomOut logger
+func (l *Logger) SetCustomOut(out io.Writer) *Logger {
+	l.custom.SetOutput(out)
+	return l
+}
+
+// SetDebugOut logger
+func (l *Logger) SetDebugOut(out io.Writer) *Logger {
+	l.debug.SetOutput(out)
+	return l
+}
+
+// SetErrorOut logger
+func (l *Logger) SetErrorOut(out io.Writer) *Logger {
+	l.err.SetOutput(out)
+	return l
+}
+
+// SetFatalOut logger
+func (l *Logger) SetFatalOut(out io.Writer) *Logger {
+	l.fatal.SetOutput(out)
+	return l
+}
+
+// SetInfoOut logger
+func (l *Logger) SetInfoOut(out io.Writer) *Logger {
+	l.info.SetOutput(out)
+	return l
+}
+
+// SetPanicOut logger
+func (l *Logger) SetPanicOut(out io.Writer) *Logger {
+	l.panic.SetOutput(out)
+	return l
+}
+
+// SetWarnOut logger
+func (l *Logger) SetWarnOut(out io.Writer) *Logger {
+	l.warn.SetOutput(out)
+	return l
 }
 
 // EnableDebug function
