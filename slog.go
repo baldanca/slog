@@ -18,8 +18,8 @@ var (
 )
 
 type (
-	// Service contract
-	Service interface {
+	// LoggerService contract
+	LoggerService interface {
 		// Loggers
 		Custom(calldepth int, prefix string, v ...interface{})
 		Customf(calldepth int, prefix, format string, v ...interface{})
@@ -51,8 +51,6 @@ type (
 		AddHandler(h Handler) *Logger
 		Humanize() *Logger
 		NoLog() *Logger
-		// Stack
-		NewStack() *Stack
 	}
 	// Logger model
 	Logger struct {
@@ -61,19 +59,19 @@ type (
 		noLog     bool
 		humanize  bool
 		stack     *Stack
-		file      *File
-		custom    *log.Logger
-		debug     *log.Logger
-		err       *log.Logger
-		fatal     *log.Logger
-		info      *log.Logger
-		panic     *log.Logger
-		warn      *log.Logger
+		// file      *File
+		custom *log.Logger
+		debug  *log.Logger
+		err    *log.Logger
+		fatal  *log.Logger
+		info   *log.Logger
+		panic  *log.Logger
+		warn   *log.Logger
 	}
 )
 
 // New logger service
-func New(out io.Writer, flag int) Service {
+func New(out io.Writer, flag int) LoggerService {
 	return &Logger{
 		calldepth: 2,
 		handlers:  NewHandlers(),
@@ -315,17 +313,4 @@ func (l *Logger) Humanize() *Logger {
 func (l *Logger) NoLog() *Logger {
 	l.noLog = true
 	return l
-}
-
-// NewStack funtion
-func (l *Logger) NewStack() *Stack {
-	l.stack = new(Stack)
-	l.custom.SetOutput(io.MultiWriter(l.custom.Writer(), l.stack))
-	l.debug.SetOutput(io.MultiWriter(l.debug.Writer(), l.stack))
-	l.err.SetOutput(io.MultiWriter(l.err.Writer(), l.stack))
-	l.fatal.SetOutput(io.MultiWriter(l.fatal.Writer(), l.stack))
-	l.info.SetOutput(io.MultiWriter(l.info.Writer(), l.stack))
-	l.panic.SetOutput(io.MultiWriter(l.panic.Writer(), l.stack))
-	l.warn.SetOutput(io.MultiWriter(l.warn.Writer(), l.stack))
-	return l.stack
 }

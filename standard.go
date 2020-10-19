@@ -7,7 +7,7 @@ import (
 
 var (
 	// StdLog is a standard log configuration
-	StdLog Service
+	StdLog LoggerService
 )
 
 func init() {
@@ -16,7 +16,7 @@ func init() {
 }
 
 // SetStdLog function
-func SetStdLog(l Service) {
+func SetStdLog(l LoggerService) {
 	StdLog = l
 }
 
@@ -91,37 +91,36 @@ func Warnf(format string, v ...interface{}) {
 }
 
 // EnableDebug on standard logger
-func EnableDebug() Service {
+func EnableDebug() LoggerService {
 	StdLog.EnableDebug()
 	return StdLog
 }
 
 // Colorize on standard logger
-func Colorize() Service {
+func Colorize() LoggerService {
 	StdLog.Colorize()
 	return StdLog
 }
 
 // AddHandler on standard logger
-func AddHandler(h Handler) Service {
+func AddHandler(h Handler) LoggerService {
 	StdLog.AddHandler(h)
 	return StdLog
 }
 
 // Humanize on standard logger
-func Humanize() Service {
+func Humanize() LoggerService {
 	StdLog.Humanize()
 	return StdLog
 }
 
 // NoLog on standard logger
-func NoLog() Service {
+func NoLog() LoggerService {
 	StdLog.NoLog()
 	return StdLog
 }
 
-// NewStack on standard logger
-func NewStack() Service {
-	StdLog.NewStack()
-	return StdLog
+// NewStdStack function
+func NewStdStack() *Stack {
+	return NewStack(StdLog.(*Logger))
 }
