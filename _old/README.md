@@ -1,18 +1,15 @@
 # Slog (WORK IN PROGRESS)
 
+[![PkgGoDev](https://pkg.go.dev/badge/gitHub.com/luigiBaldanza/slog)](https://pkg.go.dev/gitHub.com/luigiBaldanza/slog) [![Go Report Card](https://goreportcard.com/badge/github.com/luigiBaldanza/slog)](https://goreportcard.com/report/github.com/luigiBaldanza/slog)
+
 ## TODO
-- VERIFICAR QUAL A MELHOR LICENÇA
-- MELHORAR COMENTARIOS
-- ORGANIZAR CÓDIGO COM ORDEM ALFABÉTICA
-- CRIAR SISTEMA DE ARMAZENAMENTO EM ARQUIVO E ARQUIVOS SÓ DE ERROS		
-- CRIAR SISTEMA DE HIERARQUIA (TRACKER) DE LOG
-- MONGODB WRITER
-	- MAKE A INSERT IN GOLANG BASED ON WRITER PATTERN
-	- UNMARSHALL IN bson.M
-- IMPLEMENT LOAD ENVIRONMENT
-- IMPLEMENT SETOUTPUT
-- IMPLEMENTS TESTS
-- REVIEW README
+- Review all names (variables, funcs, types)
+- O código deve falar por si só, menos comentários e mais legibilidade
+- Funcoes descreverem exatamente oq vão fazer
+- Principio de responsabilidade de código
+- 5 stages of devops evolution
+- Fazer PR para o testify com possivel melhoria ao comparar valores
+- The art of readable code
 
 Slog is a logger for Go based on the standard library logger.
 

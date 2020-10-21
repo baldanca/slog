@@ -1,15 +1,6 @@
 package slog
 
-import (
-	"errors"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
-	"os"
-	"strings"
-)
-
+/*
 var (
 	// ErrInvalidPrefix error
 	ErrInvalidPrefix = errors.New("invalid prefix")
@@ -18,8 +9,8 @@ var (
 )
 
 type (
-	// LoggerService contract
-	LoggerService interface {
+	// Logger interface
+	Logger interface {
 		// Loggers
 		Custom(calldepth int, prefix string, v ...interface{})
 		Customf(calldepth int, prefix, format string, v ...interface{})
@@ -52,14 +43,14 @@ type (
 		Humanize() *Logger
 		NoLog() *Logger
 	}
-	// Logger model
-	Logger struct {
+	// Slog model
+	Slog struct {
 		calldepth int
 		handlers  *Handlers
 		noLog     bool
 		humanize  bool
-		stack     *Stack
-		// file      *File
+		// stack     *Stack
+		file   FileContract
 		custom *log.Logger
 		debug  *log.Logger
 		err    *log.Logger
@@ -68,8 +59,9 @@ type (
 		panic  *log.Logger
 		warn   *log.Logger
 	}
-)
+) */
 
+/*
 // New logger service
 func New(out io.Writer, flag int) LoggerService {
 	return &Logger{
@@ -314,3 +306,4 @@ func (l *Logger) NoLog() *Logger {
 	l.noLog = true
 	return l
 }
+*/

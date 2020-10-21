@@ -1,13 +1,6 @@
 package slog
 
-import (
-	"fmt"
-	"io"
-
-	jsoniter "github.com/json-iterator/go"
-)
-
-type (
+/* type (
 	// StackService contract
 	StackService interface {
 		GetAll()
@@ -118,3 +111,4 @@ func (t *MultiWriter) Write(p []byte) (n int, err error) {
 	}
 	return len(p), nil
 }
+*/

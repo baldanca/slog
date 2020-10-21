@@ -1,11 +1,6 @@
 package slog
 
-import (
-	"log"
-	"os"
-)
-
-var (
+/* var (
 	// StdLog is a standard log configuration
 	StdLog LoggerService
 )
@@ -123,4 +118,4 @@ func NoLog() LoggerService {
 // NewStdStack function
 func NewStdStack() *Stack {
 	return NewStack(StdLog.(*Logger))
-}
+} */
