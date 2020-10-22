@@ -1,119 +1,77 @@
 package slog
 
-/*
-var (
-	// ErrInvalidPrefix error
-	ErrInvalidPrefix = errors.New("invalid prefix")
-	// ErrPrefixTooLong error
-	ErrPrefixTooLong = errors.New("prefix too long")
+import (
+	"strings"
+
+	"github.com/luigiBaldanza/slog/level"
 )
 
 type (
-	// Logger interface
+	// Logger interface type
 	Logger interface {
-		// Loggers
-		Custom(calldepth int, prefix string, v ...interface{})
-		Customf(calldepth int, prefix, format string, v ...interface{})
-		Debug(v ...interface{})
-		Debugf(format string, v ...interface{})
-		Error(v ...interface{})
-		Errorf(format string, v ...interface{})
-		Fatal(v ...interface{})
-		Fatalf(format string, v ...interface{})
-		Info(v ...interface{})
-		Infof(format string, v ...interface{})
-		Panic(v ...interface{})
-		Panicf(format string, v ...interface{})
-		Warn(v ...interface{})
-		Warnf(format string, v ...interface{})
-		// Outputs
-		SetDefaultOut(out io.Writer) *Logger
-		SetCustomOut(out io.Writer) *Logger
-		SetDebugOut(out io.Writer) *Logger
-		SetErrorOut(out io.Writer) *Logger
-		SetFatalOut(out io.Writer) *Logger
-		SetInfoOut(out io.Writer) *Logger
-		SetPanicOut(out io.Writer) *Logger
-		SetWarnOut(out io.Writer) *Logger
-		// Features
-		EnableDebug() *Logger
-		Colorize() *Logger
-		// Handler
-		AddHandler(h Handler) *Logger
-		Humanize() *Logger
-		NoLog() *Logger
-	}
-	// Slog model
-	Slog struct {
-		calldepth int
-		handlers  *Handlers
-		noLog     bool
-		humanize  bool
-		// stack     *Stack
-		file   FileContract
-		custom *log.Logger
-		debug  *log.Logger
-		err    *log.Logger
-		fatal  *log.Logger
-		info   *log.Logger
-		panic  *log.Logger
-		warn   *log.Logger
-	}
-) */
+		Log(calldepth int, logLevel level.Type, values ...interface{})
+		Debug(values ...interface{})
+		Info(values ...interface{})
+		Warn(values ...interface{})
+		Error(values ...interface{})
+		Fatal(values ...interface{})
+		Panic(values ...interface{})
+		/*
 
-/*
-// New logger service
-func New(out io.Writer, flag int) LoggerService {
-	return &Logger{
-		calldepth: 2,
-		handlers:  NewHandlers(),
-		noLog:     false,
-		humanize:  false,
-		custom:    log.New(out, customLevel.Prefix(), flag),
-		debug:     log.New(ioutil.Discard, debugLevel.Prefix(), flag),
-		err:       log.New(out, errLevel.Prefix(), flag),
-		fatal:     log.New(out, fatalLevel.Prefix(), flag),
-		info:      log.New(out, infoLevel.Prefix(), flag),
-		panic:     log.New(out, panicLevel.Prefix(), flag),
-		warn:      log.New(out, warnLevel.Prefix(), flag),
-	}
-}
+			Logf(calldepth int, prefix, format string, values ...interface{})
+			Debugf(format string, values ...interface{})
+			Infof(format string, values ...interface{})
+			Warnf(format string, values ...interface{})
+			Errorf(format string, values ...interface{})
+			Fatalf(format string, values ...interface{})
+			Panicf(format string, values ...interface{})
 
-// verifyPrefix input logger
-func (l *Logger) verifyPrefix(prefix string) {
-	if prefix == "" {
-		panic(ErrInvalidPrefix)
+			SetDefaultOut(out io.Writer)
+			SetCustomOut(out io.Writer)
+			SetDebugOut(out io.Writer)
+			SetErrorOut(out io.Writer)
+			SetFatalOut(out io.Writer)
+			SetInfoOut(out io.Writer)
+			SetPanicOut(out io.Writer)
+			SetWarnOut(out io.Writer)
+
+			EnableDebug() */
+		// 	Next implementations:
+		// 		Colorize()
+
+		// 		AddHandler(h handler.Func)
+		// 		Humanize()
+		// 		NoLog()
+
+		// 		Tracef(format string, args ...interface{})
+		// 		Trace(args ...interface{})
+		// 		Traceln(args ...interface{})
 	}
-	if len(prefix) > 5 {
-		panic(ErrPrefixTooLong)
-	}
-}
+)
 
 // verifyFormat input logger
-func (l *Logger) verifyFormat(format *string) {
+func verifyFormat(format *string) {
 	if !strings.HasSuffix(*format, "\n") {
 		*format = *format + "\n"
 	}
 }
 
+/*
+
 // verifyFlags input logger
-func (l *Logger) verifyFlags() {
-	if l.noLog {
+func (s *Slog) verifyFlags() {
+	if s.noLog {
 		l.AddHandler(noLogAll)
 	}
-	if l.humanize {
+	if s.humanize {
 		l.AddHandler(humanizeAll)
 	}
 }
 
-// Custom logger
-func (l *Logger) Custom(calldepth int, prefix string, v ...interface{}) {
-	l.verifyPrefix(prefix)
-	l.custom.SetPrefix(level(prefix).Prefix())
-	l.verifyFlags()
-	v = l.handlers.run(v...)
-	l.custom.Output(calldepth, fmt.Sprintln(v...))
-}
+
+
+
+
 
 // Customf logger with format
 func (l *Logger) Customf(calldepth int, prefix, format string, v ...interface{}) {

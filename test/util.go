@@ -1,4 +1,4 @@
-package handler
+package test
 
 import (
 	"errors"
@@ -10,11 +10,9 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// 	- TODO
-// 		- Review logic
-
 type (
-	dataTest struct {
+	// DataTest struct type
+	DataTest struct {
 		String  string                  `nolog:"true"`
 		Pointer *string                 `nolog:"true"`
 		Int     int                     `nolog:"true"`
@@ -26,12 +24,14 @@ type (
 		Slice   []interface{}           `nolog:"true"`
 		Logged  string
 	}
-	interTest interface {
+	// InterTest interface type
+	InterTest interface {
 		t(in interface{}) (out interface{})
 	}
 )
 
-func test(t *testing.T, expectedData, testData interface{}) {
+// Assert function
+func Assert(t *testing.T, expectedData, testData interface{}) {
 	if expectedData == nil && testData == nil {
 		return
 	}
@@ -69,7 +69,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 				if expectedIndex == testIndex {
 					expectedValue := expectedElem.Index(expectedIndex).Elem().Interface()
 					testValue := testElem.Index(testIndex).Elem().Interface()
-					test(t, expectedValue, testValue)
+					Assert(t, expectedValue, testValue)
 					testOK--
 				}
 			}
@@ -111,7 +111,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 			testObject = testData
 		}
 		if jsonOK {
-			test(t, expectedObject, testObject)
+			Assert(t, expectedObject, testObject)
 		}
 		expectedArrayLength := expectedElem.Len()
 		testArrayLength := testElem.Len()
@@ -126,7 +126,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 				if expectedIndex == testIndex {
 					expectedValue := expectedElem.Index(expectedIndex).Elem().Interface()
 					testValue := testElem.Index(testIndex).Elem().Interface()
-					test(t, expectedValue, testValue)
+					Assert(t, expectedValue, testValue)
 					testOK--
 				}
 			}
@@ -139,13 +139,13 @@ func test(t *testing.T, expectedData, testData interface{}) {
 		return
 	case reflect.Ptr:
 		expectedElem = expectedElem.Elem()
-		test(t, expectedElem.Interface(), testElem.Interface())
+		Assert(t, expectedElem.Interface(), testElem.Interface())
 		return
 	case reflect.Struct:
 		switch testElem.Kind() {
 		case reflect.Ptr:
 			testElem = testElem.Elem()
-			test(t, expectedElem.Interface(), testElem.Interface())
+			Assert(t, expectedElem.Interface(), testElem.Interface())
 			return
 		case reflect.Struct:
 			expectedNumFields := expectedElem.NumField()
@@ -163,7 +163,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 					if expectedNameField == testNameField {
 						expectedValueField := expectedElem.FieldByName(expectedNameField).Interface()
 						testValueField := testElem.FieldByName(testNameField).Interface()
-						test(t, expectedValueField, testValueField)
+						Assert(t, expectedValueField, testValueField)
 						testOK--
 					}
 				}
@@ -193,7 +193,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 				expectedMapKey := expectedMapIter.Key()
 				expectedMapValue := expectedMapIter.Value()
 				testMapValue := testElem.MapIndex(expectedMapKey)
-				test(t, expectedMapValue, testMapValue)
+				Assert(t, expectedMapValue, testMapValue)
 				testOK--
 			}
 			if testOK != 0 {
@@ -223,7 +223,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 			expectedMapKey := expectedMapIter.Key()
 			expectedMapValue := expectedMapIter.Value()
 			testMapValue := testElem.MapIndex(expectedMapKey)
-			test(t, expectedMapValue.Interface(), testMapValue.Interface())
+			Assert(t, expectedMapValue.Interface(), testMapValue.Interface())
 			testOK--
 		}
 		if testOK != 0 {
@@ -236,7 +236,7 @@ func test(t *testing.T, expectedData, testData interface{}) {
 		switch testElem.Kind() {
 		case reflect.Ptr:
 			testElem = testElem.Elem()
-			test(t, expectedElem.Interface(), testElem.Interface())
+			Assert(t, expectedElem.Interface(), testElem.Interface())
 			return
 		default:
 			if fmt.Sprintf("%v", expectedData) != fmt.Sprintf("%v", testData) {

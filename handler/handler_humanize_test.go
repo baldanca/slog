@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 	"testing"
+
+	"github.com/luigiBaldanza/slog/test"
 )
 
 func TestHumanizeAll(t *testing.T) {
@@ -40,7 +42,7 @@ func TestHumanizeAll(t *testing.T) {
 			mapTest,
 			arrayTest,
 		}
-		structTeste = dataTest{
+		structTeste = test.DataTest{
 			String:  stringTest,
 			Pointer: pointerTest,
 			Int:     intTest,
@@ -51,7 +53,7 @@ func TestHumanizeAll(t *testing.T) {
 			Array:   arrayTest,
 			Slice:   sliceTest,
 		}
-		structTesteWithNil = dataTest{
+		structTesteWithNil = test.DataTest{
 			String:  "",
 			Pointer: nil,
 			Int:     0,
@@ -78,6 +80,6 @@ func TestHumanizeAll(t *testing.T) {
 		nil,
 	}
 	for index, result := range HumanizeAll(expected...) {
-		test(t, expected[index], result)
+		test.Assert(t, expected[index], result)
 	}
 }

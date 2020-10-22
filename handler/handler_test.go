@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 	"testing"
+
+	"github.com/luigiBaldanza/slog/test"
 )
 
 func TestHandler(t *testing.T) {
@@ -45,5 +47,5 @@ func TestHandler(t *testing.T) {
 	handlers.Add(func(values ...interface{}) []interface{} {
 		return values
 	})
-	test(t, sliceTest, handlers.Run(sliceTest...))
+	test.Assert(t, sliceTest, handlers.Run(sliceTest...))
 }

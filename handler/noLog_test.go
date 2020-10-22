@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 	"testing"
+
+	"github.com/luigiBaldanza/slog/test"
 )
 
 func TestNoLogAll(t *testing.T) {
@@ -40,7 +42,7 @@ func TestNoLogAll(t *testing.T) {
 			mapTest,
 			arrayTest,
 		}
-		structTeste = dataTest{
+		structTeste = test.DataTest{
 			String:  stringTest,
 			Pointer: pointerTest,
 			Int:     intTest,
@@ -52,7 +54,7 @@ func TestNoLogAll(t *testing.T) {
 			Slice:   sliceTest,
 			Logged:  stringTest,
 		}
-		structTesteWithNil = dataTest{
+		structTesteWithNil = test.DataTest{
 			String:  "",
 			Pointer: nil,
 			Int:     0,
@@ -80,6 +82,6 @@ func TestNoLogAll(t *testing.T) {
 		nil,
 	}
 	for index, result := range NoLogAll(expected...) {
-		test(t, expected[index], result)
+		test.Assert(t, expected[index], result)
 	}
 }
